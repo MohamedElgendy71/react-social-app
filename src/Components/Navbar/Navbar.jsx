@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-
+import React, { useContext } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -33,136 +32,118 @@ export const AcmeLogo = () => {
 
 export default function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { token, setToken } = useContext(AuthContext);
+  const navigate = useNavigate();
 
+  // مصفوفة العناصر متغيرة بناءً على وجود التوكن
+  const menuItems = token
+    ? ["Home", "Profile", "Log Out"]
+    : ["Home", "Login", "Register"];
 
+  function handleLogout() {
+    localStorage.removeItem("token");
+    setToken(null);
+    navigate("/Login");
+    setIsMenuOpen(false); // قفل القائمة في الموبايل
+  }
 
-  const menuItems = [
-    "Register",
-    "Login",
-    "Log Out",
-  ];
-
-   const  {token , setToken}  = useContext(AuthContext)
-
-   console.log("Token in Navbar:", token);
-
-   
-
-   let nav = useNavigate()
-
-   function handalLogout(){
-    localStorage.removeItem("token")
-    setToken(null)
-    nav("/Login")
-   }
-
-   let Profile = useNavigate()
-
-    function handalProfile(){
-      Profile("/Profile")
-    }
-
-
-
+  function handleProfile() {
+    navigate("/Profile");
+    setIsMenuOpen(false); // قفل القائمة في الموبايل
+  }
 
   return (
     <Navbar isBordered isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+
+      {/* موبايل: زر القائمة الجانبية */}
       <NavbarContent className="sm:hidden" justify="start">
         <NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} />
       </NavbarContent>
 
+      {/* موبايل: اللوجو في النص */}
       <NavbarContent className="sm:hidden pr-3" justify="center">
         <NavbarBrand>
           <AcmeLogo />
-         <Link className="font-bold text-inherit" to={"/Home"}>Home</Link>
+          <Link className="font-bold text-inherit" to="/Home">Home</Link>
         </NavbarBrand>
       </NavbarContent>
 
+      {/* ديسكتوب: القائمة العادية */}
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
         <NavbarBrand>
           <AcmeLogo />
-          <Link className="font-bold text-inherit" to={"/Home"}>Home</Link>
+          <Link className="font-bold text-inherit" to="/Home">Home</Link>
         </NavbarBrand>
-        {/* <NavbarItem>
-          <Link color="foreground" href="#">
-            Features
-          </Link>
-        </NavbarItem>
-        <NavbarItem isActive>
-          <Link aria-current="page" href="#">
-            Customers
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link color="foreground" href="#">
-            Integrations
-          </Link>
-        </NavbarItem> */}
       </NavbarContent>
 
+      {/* يمين الناف بار: أزرار الدخول أو البروفايل */}
       <NavbarContent justify="end">
-        {!token && <>
-
-          <NavbarItem className="hidden lg:flex">
-            <Link to="/Login">Login</Link>
-          </NavbarItem>
-          <NavbarItem className="hidden lg:flex">
-            <Button as={Link} color="warning" href="#" to={"/Register"} variant="flat">
-              Sign Up
-            </Button>
-          </NavbarItem>
-
-        </>}
-
-
-
-{  token &&     <Dropdown placement="bottom-end">
-          <DropdownTrigger>
-            <Avatar
-              isBordered
-              as="button"
-              className="transition-transform"
-              color="secondary"
-              name="Jason Hughes"
-              size="sm"
-              src=""
-            />
-          </DropdownTrigger>
-          <DropdownMenu aria-label="Profile Actions" variant="flat">
-
-
-            <DropdownItem onClick={handalProfile} key="logout">
-              
-              Profile
-            </DropdownItem>
-            <DropdownItem onClick={handalLogout} key="logout" color="danger">
-              Log Out
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>}
-
-     
-
-
+        {!token ? (
+          <>
+            <NavbarItem className="hidden lg:flex">
+              <Link to="/Login">Login</Link>
+            </NavbarItem>
+            <NavbarItem className="hidden lg:flex">
+              <Button as={Link} color="warning" to="/Register" variant="flat">
+                Sign Up
+              </Button>
+            </NavbarItem>
+          </>
+        ) : (
+          <Dropdown placement="bottom-end">
+            <DropdownTrigger>
+              <Avatar
+                isBordered
+                as="button"
+                className="transition-transform"
+                color="secondary"
+                name="User"
+                size="sm"
+                src=""
+              />
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Profile Actions" variant="flat">
+              <DropdownItem onClick={handleProfile} key="profile">
+                Profile
+              </DropdownItem>
+              <DropdownItem onClick={handleLogout} key="logout" color="danger">
+                Log Out
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        )}
       </NavbarContent>
 
+      {/* قائمة الموبايل الجانبية */}
       <NavbarMenu>
-        {menuItems.map((item, index) => (
-          <NavbarMenuItem key={`${item}-${index}`}>
-            <Link
-              className="w-full"
-              color={
-                index === 2 ? "warning" : index === menuItems.length - 1 ? "danger" : "foreground"
-              }
-              href="#"
-              size="lg"
-            >
-              {item}
-            </Link>
-          </NavbarMenuItem>
-        ))}
+        {menuItems.map((item, index) => {
+          const isLogout = item === "Log Out";
+          const isProfile = item === "Profile";
+
+          return (
+            <NavbarMenuItem key={`${item}-${index}`}>
+              <Link
+                className="w-full"
+                style={{ cursor: "pointer" }}
+                color={isLogout ? "danger" : "foreground"}
+                size="lg"
+                onClick={() => {
+                  if (isLogout) {
+                    handleLogout();
+                  } else if (isProfile) {
+                    handleProfile();
+                  } else {
+                    navigate(`/${item}`);
+                    setIsMenuOpen(false);
+                  }
+                }}
+              >
+                {item}
+              </Link>
+            </NavbarMenuItem>
+          );
+        })}
       </NavbarMenu>
     </Navbar>
   );
 }
-
